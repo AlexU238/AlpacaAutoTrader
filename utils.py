@@ -17,7 +17,7 @@ class StockUseData:
     symbol: str
     amount: int
     price: float
-
+    bought: int
 
 #function returns how much money will be spent per position
 def get_usable_balance_per_stock(total_usable_balance, stock_list):
@@ -41,5 +41,5 @@ def create_stock_use_data_list(symbols):
     #symbols: list of strings
     stock_use_data_list = []
     for symbol in symbols:
-        stock_use_data_list.append(StockUseData(symbol=symbol, amount=0, price=0))
+        stock_use_data_list.append(StockUseData(symbol=symbol, amount=0, price=0, bought=0))
     return stock_use_data_list

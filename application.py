@@ -17,6 +17,7 @@ import sys
 import time
 import pytz
 from datetime import datetime
+import price_info
 
 print("Loggin in...")
 configuration.get_configuration_info("config.txt")
@@ -29,7 +30,8 @@ print("Login successful!\n")
 
 print("Account data:")
 account.check_account_data(trade_client)
-
+is_just_started=True
+is_hold=False
 print("\nStarting...")
 
 
@@ -49,6 +51,42 @@ while True:
         formated_current_time = current_time.strftime("%H:%M:%S")
 
         trading_time=("16:30:00" <= formated_current_time < "23:00:00")
+
+        if trading_time:
+            #first_buy
+            if is_just_started:
+                for stock in work_list:
+                    current_price=price_info.get_current_trade_price(stock_client,stock.symbol)
+                    if(current_price>position_size):
+                        print(f"Insufficient funds to buy {stock.symbol} with {current_price} per stock")
+                        stock.amount=-1
+                        stock.bought=-1
+                        continue
+                    stock.amount=utils.get_amount_of_stocks_to_buy(current_price,position_size)
+                    print(f"Will attemt to buy {stock.amount} of {stock.symbol}.")
+                    orders.marker_buy_order(stock.symbol,stock.amount,client)
+                    stock.price=current_price*stock.amount
+                    stock.bought=stock.amount
+                is_just_started=False
+                is_hold=True
+                print("First buy concluded.")
+            if is_hold:
+                print("Hold...")
+                for stock in work_list:
+                    possible_sell_price=stock.bought*price_info.get_current_trade_price(stock_client,stock.symbol)
+                    if(possible_sell_price>=stock.price+1):
+                        print("Sell")
+                        if stock.bought>0:
+                            print(f"Will attemt to sell {stock.amount} of {stock.symbol}.")
+                            new_current_price=price_info.get_current_trade_price(stock_client,stock.symbol)
+                            orders.marker_sell_order(stock.symbol,stock.bought,client)
+                            print("Sold for: ",new_current_price*stock.bought)
+                            stock.bought=0
+                            stock.price=0
+                    else continue
+
+
+
     except Exception as e:
         print("Error: ",e)
         break
