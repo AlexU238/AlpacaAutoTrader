@@ -4,7 +4,7 @@
 #
 # Author:      U238 (https://github.com/AlexU238)
 #
-# Last Edit:   07/09/2023
+# Last Edit:   08/09/2023
 # Copyright:   (c) Oleksii Bilous 2023-present
 # License:     MIT License (See https://opensource.org/licenses/MIT)
 #-------------------------------------------------------------------------------------------
@@ -18,6 +18,7 @@ class StockUseData:
     amount: int
     price: float
     bought: int
+    is_hold: bool
 
 #function returns how much money will be spent per position
 def get_usable_balance_per_stock(total_usable_balance, stock_list):
@@ -41,5 +42,5 @@ def create_stock_use_data_list(symbols):
     #symbols: list of strings
     stock_use_data_list = []
     for symbol in symbols:
-        stock_use_data_list.append(StockUseData(symbol=symbol, amount=0, price=0, bought=0))
+        stock_use_data_list.append(StockUseData(symbol=symbol, amount=0, price=0, bought=0, is_hold=False))
     return stock_use_data_list

@@ -4,7 +4,7 @@
 #
 # Author:      U238 (https://github.com/AlexU238)
 #
-# Last Edit:   23d August 2023
+# Last Edit:   23/08/2023
 # Copyright:   (c) Oleksii Bilous 2023-present
 # License:     MIT License (See https://opensource.org/licenses/MIT)
 #---------------------------------------------------------------------------------

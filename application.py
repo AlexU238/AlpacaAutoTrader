@@ -4,7 +4,7 @@
 #
 # Author:      U238 ( https://github.com/AlexU238 )
 #
-# Last Edit:   23d August 2023
+# Last Edit:   08/09/2023
 # Copyright:   (c) Oleksii Bilous 2023-present
 # License:     MIT License (See https://opensource.org/licenses/MIT)
 #-------------------------------------------------------------------------------
@@ -18,6 +18,7 @@ import time
 import pytz
 from datetime import datetime
 import price_info
+import orders
 
 print("Loggin in...")
 configuration.get_configuration_info("config.txt")
@@ -31,7 +32,6 @@ print("Login successful!\n")
 print("Account data:")
 account.check_account_data(trade_client)
 is_just_started=True
-is_hold=False
 print("\nStarting...")
 
 
@@ -56,37 +56,55 @@ while True:
             #first_buy
             if is_just_started:
                 for stock in work_list:
-                    current_price=price_info.get_current_trade_price(stock_client,stock.symbol)
+                    current_price=price_info.get_current_trade_price(stock_client,stock.symbol)+0.01
                     if(current_price>position_size):
                         print(f"Insufficient funds to buy {stock.symbol} with {current_price} per stock")
                         stock.amount=-1
                         stock.bought=-1
                         continue
                     stock.amount=utils.get_amount_of_stocks_to_buy(current_price,position_size)
-                    print(f"Will attemt to buy {stock.amount} of {stock.symbol}.")
-                    orders.marker_buy_order(stock.symbol,stock.amount,client)
+                    print(f"Will attemt to buy {stock.amount} of {stock.symbol} for {current_price}.")
+                    orders.marker_buy_order(stock.symbol,stock.amount,trade_client)
                     stock.price=current_price*stock.amount
                     stock.bought=stock.amount
+                    stock.is_hold=True
                 is_just_started=False
-                is_hold=True
                 print("First buy concluded.")
-            if is_hold:
-                print("Hold...")
-                for stock in work_list:
+            for stock in work_list:
+                if(stock.is_hold):
                     possible_sell_price=stock.bought*price_info.get_current_trade_price(stock_client,stock.symbol)
-                    if(possible_sell_price>=stock.price+1):
+                    if(possible_sell_price>= stock.price+0.1):
                         print("Sell")
                         if stock.bought>0:
                             print(f"Will attemt to sell {stock.amount} of {stock.symbol}.")
                             new_current_price=price_info.get_current_trade_price(stock_client,stock.symbol)
-                            orders.marker_sell_order(stock.symbol,stock.bought,client)
+                            orders.marker_sell_order(stock.symbol,stock.bought,trade_client)
                             print("Sold for: ",new_current_price*stock.bought)
                             stock.bought=0
                             stock.price=0
-                    else continue
+                            stock.is_hold=False
+                    else:
+                        print(f"Not profitable to sell {stock.symbol} yet, holding...")
+                else:
+                    new_current_price=price_info.get_current_trade_price(stock_client,stock.symbol)+0.01
+                    if(new_current_price>position_size):
+                        print(f"Insufficient funds to buy {stock.symbol} with {new_current_price} per stock")
+                        stock.amount=-1
+                        stock.bought=-1
+                        continue
+                    new_bought=utils.get_amount_of_stocks_to_buy(new_current_price,position_size)
+                    if(new_bought>=stock.amount):
+                        print(f"Will attemt to buy {new_bought} of {stock.symbol}...")
+                        orders.marker_buy_order(stock.symbol,new_bought,trade_client)
+                        print(f"Bought {new_bought} of {stock.symbol}")
+                        stock.bought=new_bought
+                        stock.price=new_current_price*new_bought
+                        stock.is_hold=True
+                    else:
+                        print(f"Disadvantageous to buy {stock.symbol}, waiting...")
 
 
-
+        time.sleep(60)
     except Exception as e:
         print("Error: ",e)
         break
