@@ -4,7 +4,7 @@
 #
 # Author:      U238 ( https://github.com/AlexU238 )
 #
-# Last Edit:   08/09/2023
+# Last Edit:   10/09/2023
 # Copyright:   (c) Oleksii Bilous 2023-present
 # License:     MIT License (See https://opensource.org/licenses/MIT)
 #-------------------------------------------------------------------------------
@@ -29,8 +29,7 @@ client_manager=client.ClientLoginManager(client.StockHistoricalDataClientLogin()
 stock_client=client_manager.logInClient(configuration.module_values["API_KEY"],configuration.module_values["SECRET"])
 print("Login successful!\n")
 
-print("Account data:")
-account.check_account_data(trade_client)
+account.get_account_data(trade_client)
 is_just_started=True
 print("\nStarting...")
 
@@ -43,14 +42,21 @@ except Exception as e:
     print("Error in calculations of balance, price per stock or in creation of symbol list: ", e)
     sys.exit(1)
 
+time_zone=pytz.timezone('Europe/Prague')
+
+print(trade_client.get_account().daytrade_count)
 
 while True:
     try:
-        time_zone=pytz.timezone('Europe/Prague')
-        current_time=datetime.now(time_zone)
-        formated_current_time = current_time.strftime("%H:%M:%S")
 
-        trading_time=("16:30:00" <= formated_current_time < "23:00:00")
+        if(account.account_permissions["account_status"]!="ACTIVE"): break
+        if(account.account_permissions["buying_power"]<1): break
+        if(account.account_permissions["day_trade_buy_power"]<1): break
+        if(account.account_permissions["trading_blocked"]): break
+        if(account.account_permissions["account_blocked"]): break
+
+        trading_time=trade_client.get_clock().is_open
+        #("16:30:00" <= formated_current_time < "23:00:00")
 
         if trading_time:
             #first_buy
@@ -103,7 +109,12 @@ while True:
                     else:
                         print(f"Disadvantageous to buy {stock.symbol}, waiting...")
 
+        else:
+            print("Market closed...")
 
+        current_time=datetime.now(time_zone)
+        formated_current_time = current_time.strftime("%H:%M:%S")
+        print("Time: ", formated_current_time)
         time.sleep(60)
     except Exception as e:
         print("Error: ",e)
