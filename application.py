@@ -79,7 +79,7 @@ while True:
             for stock in work_list:
                 if(stock.is_hold):
                     possible_sell_price=stock.bought*price_info.get_current_trade_price(stock_client,stock.symbol)
-                    if(possible_sell_price>= stock.price+0.1):
+                    if(possible_sell_price>= stock.price+configuration.module_values["PROFIT"]):
                         print("Sell")
                         if stock.bought>0:
                             print(f"Will attemt to sell {stock.amount} of {stock.symbol}.")

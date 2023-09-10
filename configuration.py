@@ -15,7 +15,8 @@ module_values = {
     'API_KEY': "",
     'SECRET': "",
     'SYMBOL_LIST': [],
-    'BALANCE': 0.0
+    'BALANCE': 0.0,
+    'PROFIT': 0.0
 }
 
 def get_configuration_info(file_path):
@@ -30,6 +31,8 @@ def get_configuration_info(file_path):
                 if key == 'SYMBOL_LIST':
                     module_values[key] = ast.literal_eval(value.strip())
                 elif key == 'BALANCE':
+                    module_values[key] = float(value.strip())
+                elif key == 'PROFIT':
                     module_values[key] = float(value.strip())
                 else:
                     module_values[key] = value.strip()
