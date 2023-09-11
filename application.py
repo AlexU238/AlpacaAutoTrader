@@ -44,7 +44,7 @@ except Exception as e:
 
 time_zone=pytz.timezone('Europe/Prague')
 
-print(trade_client.get_account().daytrade_count)
+#print(trade_client.get_account().daytrade_count)
 
 while True:
     try:
@@ -74,18 +74,20 @@ while True:
                     stock.price=current_price*stock.amount
                     stock.bought=stock.amount
                     stock.is_hold=True
+                    print(f"Bought {stock.amount} of {stock.symbol} for: ",price_info.get_current_trade_price(stock_client,stock.symbol)*stock.bought)
                 is_just_started=False
                 print("First buy concluded.")
             for stock in work_list:
                 if(stock.is_hold):
-                    possible_sell_price=stock.bought*price_info.get_current_trade_price(stock_client,stock.symbol)
+                    per_stock_price=price_info.get_current_trade_price(stock_client,stock.symbol)
+                    possible_sell_price=stock.bought*per_stock_price
                     if(possible_sell_price>= stock.price+configuration.module_values["PROFIT"]):
                         print("Sell")
                         if stock.bought>0:
-                            print(f"Will attemt to sell {stock.amount} of {stock.symbol}.")
+                            print(f"Will attemt to sell {stock.amount} of {stock.symbol} at {per_stock_price} per stock")
                             new_current_price=price_info.get_current_trade_price(stock_client,stock.symbol)
                             orders.marker_sell_order(stock.symbol,stock.bought,trade_client)
-                            print("Sold for: ",new_current_price*stock.bought)
+                            print(f"Sold {stock.symbol} for: ",price_info.get_current_trade_price(stock_client,stock.symbol)*stock.bought)
                             stock.bought=0
                             stock.price=0
                             stock.is_hold=False
@@ -100,12 +102,12 @@ while True:
                         continue
                     new_bought=utils.get_amount_of_stocks_to_buy(new_current_price,position_size)
                     if(new_bought>=stock.amount):
-                        print(f"Will attemt to buy {new_bought} of {stock.symbol}...")
+                        print(f"Will attemt to buy {new_bought} of {stock.symbol} at {new_current_price}...")
                         orders.marker_buy_order(stock.symbol,new_bought,trade_client)
-                        print(f"Bought {new_bought} of {stock.symbol}")
                         stock.bought=new_bought
                         stock.price=new_current_price*new_bought
                         stock.is_hold=True
+                        print(f"Bought {new_bought} of {stock.symbol} for: ",price_info.get_current_trade_price(stock_client,stock.symbol)*stock.bought)
                     else:
                         print(f"Disadvantageous to buy {stock.symbol}, waiting...")
 
@@ -117,5 +119,5 @@ while True:
         print("Time: ", formated_current_time)
         time.sleep(60)
     except Exception as e:
-        print("Error: ",e)
+        print("Overall Error: ",e)
         break
